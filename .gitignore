@@ -1,0 +1,10 @@
+# 中间产物
+chunks/
+preview/
+render.log
+__pycache__/
+*.pyc
+music.wav
+*.mp4
+*.zip
+.DS_Store
