@@ -334,3 +334,60 @@ def big_title(canvas, y, main, size=130, alpha=1.0, color=WHITE, sub=None, sub_s
     canvas.text((W / 2, y), main, size, color, "mm", alpha, glow=1.15)
     if sub:
         canvas.text((W / 2, y + size * 0.68), sub, sub_size, (150, 165, 210), "mm", alpha * 0.9, glow=0.5, tracking=int(sub_size*0.45))
+
+
+# ================= v2: 双语字幕 / 章节卡 / 手稿纹理 =================
+
+def subtitle2(canvas, y, zh, en, size=42, alpha=1.0, color=(210, 222, 248),
+              en_color=(128, 148, 198), gap=0.86):
+    """中英双语字幕"""
+    if alpha <= 0.01: return
+    canvas.text((W / 2, y), zh, size, color, "mm", alpha, glow=0.55)
+    canvas.text((W / 2, y + size * gap), en, int(size * 0.42), en_color, "mm",
+                alpha * 0.8, glow=0.3, tracking=int(size * 0.12))
+
+ROMAN = {1: "Ⅰ", 2: "Ⅱ", 3: "Ⅲ", 4: "Ⅳ", 5: "Ⅴ", 6: "Ⅵ", 7: "Ⅶ", 8: "Ⅷ"}
+
+def chapter_card(canvas, num, zh, en, alpha=1.0, y=430, t=0.0):
+    """罗马数字章节卡: Ⅴ 伽罗瓦 GALOIS THEORY 样式"""
+    if alpha <= 0.01: return
+    cxx = W / 2
+    # 装饰横线（左右展开）
+    k = ease_out_cubic(seg(t, 0, 0.8))
+    for s in (-1, 1):
+        x1 = cxx + s * (150 + 260 * k)
+        x2 = cxx + s * 150
+        canvas.line((x1, y), (x2, y), (150, 160, 210), 1, 0.5 * alpha * k, glow=0.25)
+    # 罗马数字
+    canvas.text((cxx, y - 120), ROMAN.get(num, str(num)), 64, GOLD, "mm", alpha, glow=1.1)
+    # 中文大字
+    canvas.text((cxx, y + 10), zh, 96, WHITE, "mm", alpha, glow=1.2, tracking=14)
+    # 英文
+    canvas.text((cxx, y + 130), en, 34, (150, 165, 215), "mm", alpha * 0.92,
+                glow=0.4, tracking=int(34 * 0.5))
+
+def manuscript_bg(seed=17, dust_k=1.0):
+    """旧纸手稿背景: 米黄纹理 + 斑点 + 暗角"""
+    import numpy as np
+    from PIL import Image as _Img, ImageFilter as _F
+    rng = np.random.default_rng(seed)
+    base = np.zeros((H, W, 3), np.float32)
+    base[..., 0] = np.linspace(30, 22, H)[:, None]
+    base[..., 1] = np.linspace(24, 18, H)[:, None]
+    base[..., 2] = np.linspace(20, 15, H)[:, None]
+    # 纸张微光(中央亮)
+    yy = np.linspace(-1, 1, H, dtype=np.float32)[:, None]
+    xx = np.linspace(-1, 1, W, dtype=np.float32)[None, :]
+    base += np.exp(-(xx * xx * 0.8 + yy * yy * 1.4))[..., None] * np.array([26, 20, 12], np.float32)
+    # 纤维噪声
+    noise = rng.normal(0, 1, (H // 4, W // 4, 1)).astype(np.float32)
+    n = np.asarray(_Img.fromarray(((noise[:, :, 0] * 0.5 + 0.5) * 255).astype(np.uint8)).resize((W, H), _Img.BILINEAR), np.float32)
+    base += ((n - 128) / 128 * 4.5)[..., None] * np.array([1.0, 0.85, 0.6], np.float32)
+    # 霉斑/年份污渍
+    for _ in range(24):
+        cx, cy = rng.uniform(0, W), rng.uniform(0, H)
+        r = rng.uniform(30, 130)
+        d2 = (xx * W - cx) ** 2 + (yy * H - cy) ** 2
+        base += np.exp(-d2 / (r * r))[..., None] * rng.uniform(1.5, 4.5, 3).astype(np.float32) * np.array([1.2, 0.7, 0.3])
+    np.clip(base, 0, 255, out=base)
+    return base.astype(np.uint8)
