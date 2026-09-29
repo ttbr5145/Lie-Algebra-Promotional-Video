@@ -24,7 +24,7 @@
 
 **《对称性的语言》** · 1920×1080 · 30fps · 3′08″ · H.264 + AAC
 
-📥 从 [Releases](../../releases) 页面下载完整成片 `李代数宣传片.mp4`。
+📥 从 [Releases](../../releases) 页面下载完整成片 `Lie-Algebra-Promo-v1.1.mp4`。
 
 ## 本版更新（v1.1）
 
@@ -77,7 +77,7 @@ python3.11 music.py
 
 # 混流成片
 ffmpeg -y -i chunks/video_noaudio.mp4 -i music.wav \
-       -c:v copy -c:a aac -b:a 192k -shortest 李代数宣传片.mp4
+       -c:v copy -c:a aac -b:a 192k -shortest Lie-Algebra-Promo-v1.1.mp4
 ```
 
 ## 目录结构
